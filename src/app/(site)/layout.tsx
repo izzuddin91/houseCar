@@ -18,13 +18,14 @@ export default function RootLayout({
 
     function authCheck() {
         const authorized: boolean = isAuthAuthorized();
-        console.log('from layout tsx '+ authorized)
+        console.log('authorized is ' + authorized)
         if (authorized) {
           setIsAuthorized(true);
           name = getUserAuth();
         } else {
           setIsAuthorized(false);
         }
+        
       }
     
       if (isAuthorized){

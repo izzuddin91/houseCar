@@ -1,6 +1,7 @@
 import firebase from "firebase/compat/app";
 import "firebase/auth";
 import "firebase/compat/firestore";
+import 'firebase/storage'; 
 
 const clientCredentials = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,7 +22,6 @@ const firebaseConfig = {
   };
 
 if (!firebase.apps.length) {
-    console.log('initialize')
     firebase.initializeApp(firebaseConfig)
 }
 
