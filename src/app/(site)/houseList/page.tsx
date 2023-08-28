@@ -12,7 +12,7 @@ export default function Home() {
   );
   // const [addFlexItem, setAddFlexItem] = useState([{id: '', fullName: '', username: '', phoneNo: '' }])
   const [addFlexItem, setAddFlexItem] = useState([
-    { houseName: "", house_image: "", houseId: "" },
+    { houseName: "", house_image: "", houseId: "" , location: ""},
   ]);
   console.log("test");
   houses?.docs.map((doc) => console.log(doc.data()));
@@ -25,6 +25,7 @@ export default function Home() {
         houseName: doc.data()["houseName"],
         house_image: doc.data()["house_image"],
         houseId: doc.data()["houseId"],
+        location: doc.data()["location"]
       };
       // array.push(doc.data())
     });
@@ -70,7 +71,7 @@ export default function Home() {
                     className="block rounded-full"
                     src="https://picsum.photos/32/32/?random"
                   />
-                  <p className="ml-2 text-sm">House Logs</p>
+                  <p className="ml-2 text-sm">Location: {row.location}</p>
                 </a>
                 <a
                   className="no-underline text-grey-darker hover:text-red-dark"

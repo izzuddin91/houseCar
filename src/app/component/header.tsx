@@ -38,7 +38,7 @@ export const Header = ({
     <Navbar
       fluid
       theme={{
-        base: "bg-yellow-300 px-2 py-2.5 border-b shadow-sm border-gray-200",
+        base: "bg-gray-300 px-2 py-2.5 border-b shadow-sm border-gray-200",
       }}
     >
       <Navbar.Brand
