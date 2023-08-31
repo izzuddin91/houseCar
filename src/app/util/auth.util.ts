@@ -1,13 +1,5 @@
 import secureLocalStorage from "react-secure-storage";
 
-interface UserAuth {
-  pfNumber: string;
-  name: string;
-  roleId?: string;
-  roleCode?: string;
-  lastLogin?: string;
-}
-
 interface SessionAuth {
   accessToken: string;
   refreshToken: string;

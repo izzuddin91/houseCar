@@ -21,7 +21,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import React from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { getStorage } from 'firebase/storage';
+import { getStorage } from "firebase/storage";
 import { FirebaseError } from "firebase/app";
 
 type FormData = {
@@ -37,18 +37,18 @@ const formSchema = yup
   .required();
 
 export default function HouseLogs() {
-
-  
-  
   const [file, setFile] = useState<File>();
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs("2022-04-17"));
+  const todayDate = new Date()
+  const day = todayDate.toLocaleString("en-US", { day : '2-digit'})
+  const month = todayDate.toLocaleString("en-US", { month: "long" })
+  const year = todayDate.getFullYear()
+  const [value, setValue] = React.useState<Dayjs | null>(dayjs(`${year}-${month}-${day}`));
   const router = useRouter();
   const params = useParams();
   // console.log(params)
-  
-  function setForm(){
-    const data2 = new FormData()
 
+  function setForm() {
+    const data2 = new FormData();
   }
 
   const [message, setMessage] = useState("");
@@ -61,41 +61,40 @@ export default function HouseLogs() {
   });
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-
     console.log(value!.format("DD/MM/YYYY"));
     const date = value!.format("YYYY-MM-DD");
     var submitData = {
       notes: data.notes,
       total: data.total,
       date: new Date(date),
+      filename: "",
+      houseId: params["houseId"]
     };
     console.log(submitData);
-    console.log(file)
+    console.log(file);
 
-    // 
-    // 
-    file?.arrayBuffer().then((val) =>{
+    file?.arrayBuffer().then((val) => {
       // console.log(val)
       const filePath = `/uploads/asd`;
       const storage = getStorage(firebase.app());
-      const storageref = ref(storage, '/uploads/test')
-      console.log(storageref)
-      const uploadTask = uploadBytesResumable(storageref, val)
+      const storageref = ref(storage, "/uploads/"+ file.name + `:${year}-${month}-${day}`);
+      console.log(storageref);
+      const uploadTask = uploadBytesResumable(storageref, val);
       uploadTask.on(
-        'state_changed',
+        "state_changed",
         (snapshot) => {
           const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
 
           // setProgressUpload(progress) // to show progress upload
 
           switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused')
-              break
-            case 'running':
-              console.log('Upload is running')
-              break
+            case "paused":
+              console.log("Upload is paused");
+              break;
+            case "running":
+              console.log("Upload is running");
+              break;
           }
         },
         (error) => {
@@ -104,12 +103,21 @@ export default function HouseLogs() {
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((url) => {
             //url is download url of file
-            console.log(url)
+            console.log(url);
             // setDownloadURL(url)
-          })
-        },
-      )
-    })
+            // we get the url here, then start updating the logs
+            submitData["filename"] = url;
+            firebase
+              .firestore()
+              .collection("/houseLogs")
+              .doc(params["houseId"])
+              .set(submitData).then(()=> {
+                alert('success!')
+              })
+          });
+        }
+      );
+    });
     // const uploadTask = storageRef.child( 'test' ).put(file.arrayBuffer);
 
     // add datepicker,
@@ -149,11 +157,15 @@ export default function HouseLogs() {
               />
             </DemoContainer>
           </LocalizationProvider>
-          <input type="file" name="file" onChange={(e) => {
-            console.log(e.target.files)
-   
-            setFile(e.target.files?.[0])
-          }} />
+          <input
+            type="file"
+            name="file"
+            onChange={(e) => {
+              console.log(e.target.files);
+
+              setFile(e.target.files?.[0]);
+            }}
+          />
           <PrimaryTextInputWithLabel
             label="Logs Description"
             name="notes"

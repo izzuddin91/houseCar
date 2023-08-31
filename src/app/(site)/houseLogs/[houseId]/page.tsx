@@ -18,13 +18,15 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import { getDocs } from "firebase/firestore";
-import SearchIcon from '@mui/icons-material/Search';
-import BrokenImageIcon from '@mui/icons-material/BrokenImage';
-import InputIcon from '@mui/icons-material/Input';
+import SearchIcon from "@mui/icons-material/Search";
+import BrokenImageIcon from "@mui/icons-material/BrokenImage";
+import InputIcon from "@mui/icons-material/Input";
 import { PrimaryButton } from "@/app/component/button/PrimaryButton";
+import { confirmAlert } from "@/app/service/alert.service";
 
 export default function HouseLogs() {
   const router = useRouter();
+
   function createNewLogs() {
     router.push("/newLogs/" + params["houseId"]);
   }
@@ -42,7 +44,7 @@ export default function HouseLogs() {
   );
 
   var [addFlexItem, setAddFlexItem] = useState([
-    { filename: "", notes: "", total: "", date: "" },
+    {id: "",  filename: "", notes: "", total: "", date: "" },
   ]);
   var list = [...addFlexItem];
   const searchParams = useSearchParams();
@@ -98,6 +100,7 @@ export default function HouseLogs() {
     house.docs.map((docs, i) => {
       amount += parseInt(docs.data()["total"]);
       addFlexItem[i] = {
+        id: docs.id,
         filename: docs.data()["filename"],
         notes: docs.data()["notes"],
         total: docs.data()["total"],
@@ -106,12 +109,30 @@ export default function HouseLogs() {
       console.log(docs.data());
       setAddFlexItem(addFlexItem);
     });
-    console.log(amount);
+
     updateAmount(amount);
+  }
+
+  function deleteItem(event: any){
+    console.log(event)
+    //delete this and show alert 
+    confirmAlert('delete', 'confirm to delete this record?', (() => {
+      firebase
+      .firestore()
+      .collection("/houseLogs").doc(event).delete().then(function() {
+        console.log("Document successfully deleted!");
+    }).catch(function(error: any) {
+        console.error("Error removing document: ", error);
+    });
+      // console.log(h3)
+    }))
   }
 
   return (
     <div className="p-5 h-screen bg-gray-100">
+      <Button variant="outlined" onClick={() => router.back()}>
+        Back
+      </Button>
       <h2>House Details </h2>
       <div className="grid grid-cols-2 gap-4 p-4">
         <div className="col-span">
@@ -142,12 +163,21 @@ export default function HouseLogs() {
               {house?.docs[0].data()["text1Value"]}
             </Box>
             <Box sx={{ p: 1 }}>
-              <Button variant="outlined" onClick={createNewLogs} endIcon={<InputIcon/>} >
+              <Button
+                variant="outlined"
+                onClick={createNewLogs}
+                endIcon={<InputIcon />}
+              >
                 New Logs
               </Button>
             </Box>
             <Box sx={{ p: 1 }}>
-              <Button color="error" variant="outlined" onClick={createNewLogs} endIcon={<BrokenImageIcon/>}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={createNewLogs}
+                endIcon={<BrokenImageIcon />}
+              >
                 Damages Logs
               </Button>
             </Box>
@@ -211,74 +241,83 @@ export default function HouseLogs() {
           </Button>
         </div>
         <div className="col-span">
- 
-            <label className="block text-sm font-medium leading-6 text-gray-900">
-              Total:
-            </label>
-            <div className="relative mt-3 rounded-md shadow-sm">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="text-gray-500 sm:text-sm">RM {amount} </span>
-              </div>
+          <label className="block text-sm font-medium leading-6 text-gray-900">
+            Total:
+          </label>
+          <div className="relative mt-3 rounded-md shadow-sm">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <span className="text-gray-500 sm:text-sm">RM {amount} </span>
             </div>
+          </div>
         </div>
       </div>
       <div className="grid grid-cols gap-4 p-4">
-      <div className="overflow-auto rounded-lg shadow hidden md:block">
-        <div>
-          <h1 style={{ float: "left" }}>House Logs </h1>
+        <div className="overflow-auto rounded-lg shadow hidden md:block">
+          <div>
+            <h1 style={{ float: "left" }}>House Logs </h1>
+          </div>
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b-2 border-gray-200">
+              <tr>
+                <th className="w-20 p-3 text-sm font-semibold tracking-wide text-left">
+                  No.
+                </th>
+                <th className="p-3 text-sm font-semibold tracking-wide text-left">
+                  Details
+                </th>
+                <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
+                  Status
+                </th>
+                <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
+                  Date
+                </th>
+                <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
+                  Total
+                </th>
+                <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
+                  Delete
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {addFlexItem.map((row, i) => {
+                return (
+                  <tr className="bg-white">
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      <a
+                        href="#"
+                        className="font-bold text-blue-500 hover:underline"
+                      >
+                        {i + 1}
+                      </a>
+                    </td>
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      {row["notes"]}
+                    </td>
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">
+                      <a href={row["filename"]}>Image</a>
+                      </span>
+                    </td>
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      {row["date"]}
+                    </td>
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      {row["total"]}
+                    </td>
+                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                      <button onClick={() => deleteItem(row['id'])}>
+                        {row['id']}
+                      </button>
+                      
+                      
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b-2 border-gray-200">
-            <tr>
-              <th className="w-20 p-3 text-sm font-semibold tracking-wide text-left">
-                No.
-              </th>
-              <th className="p-3 text-sm font-semibold tracking-wide text-left">
-                Details
-              </th>
-              <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
-                Status
-              </th>
-              <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
-                Date
-              </th>
-              <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
-                Total
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {addFlexItem.map((row, i) => {
-              return (
-                <tr className="bg-white">
-                  <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                    <a
-                      href="#"
-                      className="font-bold text-blue-500 hover:underline"
-                    >
-                      {i + 1}
-                    </a>
-                  </td>
-                  <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                    {row["notes"]}
-                  </td>
-                  <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                    <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">
-                      Completed
-                    </span>
-                  </td>
-                  <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                    {row["date"]}
-                  </td>
-                  <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                    {row["total"]}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
       </div>
     </div>
   );

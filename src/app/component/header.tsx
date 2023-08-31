@@ -2,36 +2,30 @@
 
 import React from "react";
 import { Dropdown, Navbar, Avatar } from "flowbite-react";
-import { signOut } from "firebase/auth";
-import { clearAuth } from "../util/auth.util";
-// import { DateTime } from "luxon";
-import { useRouter } from "next/navigation"
+import { getAuth, signOut } from "firebase/auth";
+import { clearAuth, getUserAuth } from "../util/auth.util";
+
 
 function signOutAndRedirect (){
-  const router = useRouter();
-  console.log('logout')
+  // const router = useRouter();
+  // console.log('logout')
   clearAuth()
-  router.push("/login");
+  // router.push("/login");
+  window.location.reload()
 }
 
 type HeaderProps = {
-  // pfNumber: string;
+
   name: string;
   roleCode: string;
-//   lastLogin: Date;
-//   onSignOut: () => void;
+
 };
 
 export const Header = ({
-  // pfNumber,
   name,
-  roleCode,
-//   lastLogin,
-//   onSignOut,
 }: HeaderProps) => {
   function getNameInitials(name: string): string {
-    // return name.match(/\b\w/g)?.join("") ?? "";
-    return 'name';
+    return name.match(/\b\w/g)?.join("") ?? "";
   }
 
   return (
@@ -56,20 +50,17 @@ export const Header = ({
           inline
           label={
             <Avatar
-              placeholderInitials={getNameInitials(name)}
+              placeholderInitials={'name'}
               bordered
               color="gray"
             >
               <div className="space-y-1 font-medium text-gray-800 text-left">
                 <div>
-                  {name} 
+              
                 </div>
                 <div className="text-sm text-gray-500">
-                  Last login at{" "}
+                 
                   <strong>
-                    {/* {DateTime.fromJSDate(lastLogin).toFormat(
-                      "ccc, dd LLL yyyy t a"
-                    )} */}
                   </strong>
                 </div>
               </div>
@@ -79,7 +70,7 @@ export const Header = ({
           <Dropdown.Header>
             <span className="block text-sm">System Admin</span>
             <span className="block truncate text-sm font-medium">
-              systemadmin@etiqa.com.my
+              {'name'}
             </span>
           </Dropdown.Header>
           <Dropdown.Item>Dashboard</Dropdown.Item>

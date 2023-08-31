@@ -4,8 +4,13 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import firebase from "../../clientApp";
 import "firebase/compat/firestore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getHouseList } from "@/app/service/firebase.service";
 export default function Home() {
+
+  useEffect(() => {
+  }, []);
+
   const [houses, housesLoading, housesError] = useCollection(
     firebase.firestore().collection("houses"),
     {}
@@ -14,10 +19,13 @@ export default function Home() {
   const [addFlexItem, setAddFlexItem] = useState([
     { houseName: "", house_image: "", houseId: "" , location: ""},
   ]);
-  console.log("test");
-  houses?.docs.map((doc) => console.log(doc.data()));
+  var returnList : any;
+
+
+  // houses?.docs.map((doc) => console.log(doc.data()));
   var array = [{}];
-  const list = [...addFlexItem];
+  var list = [...addFlexItem];
+
   if (!housesLoading && houses) {
     houses.docs.map((doc, i) => {
       // console.log(doc.data()['houseName'])
@@ -31,13 +39,12 @@ export default function Home() {
     });
   }
   //  setAddFlexItem(list)
-  console.log(list);
+
   return (
     <div className="p-8 space-y-5">
       <h1 className="text-xl mb-2">Your properties</h1>
       <div className="grid grid-cols-3 gap-3 ">
         {list.map((row) => {
-          console.log(row["houseId"]);
           var link = "/houseLogs/" + row["houseId"];
           return (
             <article className="overflow-hidden rounded-lg shadow-lg">
