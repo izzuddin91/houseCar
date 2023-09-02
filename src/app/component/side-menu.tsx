@@ -1,7 +1,6 @@
 "use client";
 
 import { Sidebar } from "flowbite-react";
-import Link from "next/link";
 import {
   HiLightningBolt,
   HiTruck,

@@ -54,7 +54,7 @@ export default function Home() {
       .then(async (value) => {
         if (value.user) {
           setAuth(data.email, data.password);
-          router.push("/houseList");
+          router.push("/dashboard");
         }
       }).catch((err)=> {
         console.log('not found')

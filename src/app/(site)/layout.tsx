@@ -4,14 +4,18 @@ import { Header } from "@/app/component/header";
 import { SideMenu } from "@/app/component/side-menu";
 import { isAuthAuthorized, getUserAuth } from "@/app/util/auth.util";
 import { useEffect, useState } from "react";
-
+// import { DateTime } from "luxon";
+import { useRouter } from "next/navigation"
+ 
 export default function RootLayout({
     children,
   }: {
     children: React.ReactNode;
   }) {
+    const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(true);
     var [name, updateName] = useState('')
+
     useEffect(() => {
         authCheck();
       }, []);
@@ -21,8 +25,10 @@ export default function RootLayout({
         console.log('authorized is ' + authorized)
         if (authorized) {
           setIsAuthorized(true);
+          updateName(getUserAuth()) 
           name = getUserAuth();
         } else {
+          router.push('/login')
           setIsAuthorized(false);
         }
         
@@ -40,7 +46,7 @@ export default function RootLayout({
           <section className="flex min-h-screen flex-col items-left bg-gray-50">
               <div className="grid">
                 <Header
-                  name={name+'asd'}
+                  name={name}
                   roleCode={'userLoginDetail.roleCode'}
                 />
               </div>

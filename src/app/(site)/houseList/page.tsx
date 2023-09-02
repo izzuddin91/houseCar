@@ -4,40 +4,28 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import firebase from "../../clientApp";
 import "firebase/compat/firestore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getHouseList } from "@/app/service/firebase.service";
 export default function Home() {
-  const [houses, housesLoading, housesError] = useCollection(
-    firebase.firestore().collection("houses"),
-    {}
-  );
-  // const [addFlexItem, setAddFlexItem] = useState([{id: '', fullName: '', username: '', phoneNo: '' }])
-  const [addFlexItem, setAddFlexItem] = useState([
-    { houseName: "", house_image: "", houseId: "" , location: ""},
-  ]);
-  console.log("test");
-  houses?.docs.map((doc) => console.log(doc.data()));
-  var array = [{}];
-  const list = [...addFlexItem];
-  if (!housesLoading && houses) {
-    houses.docs.map((doc, i) => {
-      // console.log(doc.data()['houseName'])
-      list[i] = {
-        houseName: doc.data()["houseName"],
-        house_image: doc.data()["house_image"],
-        houseId: doc.data()["houseId"],
-        location: doc.data()["location"]
-      };
-      // array.push(doc.data())
-    });
+
+  useEffect(() => {
+    getData()
+  }, []);
+
+  var [houses, updateHouses] : any = useState([{}])
+
+  async function getData(){
+    getHouseList().then((val: any) => {
+      houses = val
+      updateHouses(val)
+    })
   }
-  //  setAddFlexItem(list)
-  console.log(list);
+
   return (
     <div className="p-8 space-y-5">
       <h1 className="text-xl mb-2">Your properties</h1>
       <div className="grid grid-cols-3 gap-3 ">
-        {list.map((row) => {
-          console.log(row["houseId"]);
+        {houses.map((row: any) =>{
           var link = "/houseLogs/" + row["houseId"];
           return (
             <article className="overflow-hidden rounded-lg shadow-lg">
