@@ -5,7 +5,7 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import firebase from "../../../clientApp";
 import "firebase/compat/firestore";
 import "firebase/compat/auth";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   Box,
@@ -23,6 +23,12 @@ import BrokenImageIcon from "@mui/icons-material/BrokenImage";
 import InputIcon from "@mui/icons-material/Input";
 import { PrimaryButton } from "@/app/component/button/PrimaryButton";
 import { confirmAlert } from "@/app/service/alert.service";
+import {
+  deleteHouseLog,
+  getHouseDetails,
+  getHouseLogsOnDateRange,
+} from "@/app/service/firebase.service";
+import moment from "moment";
 
 export default function HouseLogs() {
   const router = useRouter();
@@ -30,102 +36,70 @@ export default function HouseLogs() {
   function createNewLogs() {
     router.push("/newLogs/" + params["houseId"]);
   }
-
+  var [houseDetail, updatehouseDetail] = useState({});
+  var [houseLogs, setHouseLogs]: any = useState([{}]);
   var [amount, updateAmount] = useState(0);
   var [monthVal, updateMonthVal] = useState(1);
   var [year, updateYear] = useState(2023);
   const params = useParams();
-  var [house, houseDetailLoading] = useCollection(
-    firebase
-      .firestore()
-      .collection("houses")
-      .where("houseId", "==", params["houseId"]),
-    {}
-  );
 
-  var [addFlexItem, setAddFlexItem] = useState([
-    {id: "",  filename: "", notes: "", total: "", date: "" },
-  ]);
-  var list = [...addFlexItem];
-  const searchParams = useSearchParams();
+  useEffect(() => {
+    // get the year, month and house id
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    getHouseLogsOnDateRange(params["houseId"].toString(), month, year).then(
+      (val: any) => {
+        updateMonthVal(month);
+        updateYear(year);
 
-  function updateMonth(
-    event: SelectChangeEvent<number>,
-    child: ReactNode
-  ): void {
+        setHouseLogs(val);
+        updateTotalAmount(houseLogs);
+      }
+    );
+    getHouseDetails(params["houseId"].toString()).then((val) => {
+      updatehouseDetail(val);
+    });
+  }, []);
+
+  function updateMonth(event: SelectChangeEvent<number>): void {
     const vale: string | number = event.target.value.toString();
     updateMonthVal(parseInt(vale));
   }
 
-  function updateYearVal(event: SelectChangeEvent<number>, child: ReactNode) {
+  function updateYearVal(event: SelectChangeEvent<number>) {
     const vale: string | number = event.target.value.toString();
-
     updateYear(parseInt(vale));
   }
 
-  function tryCall(): void {
-    // make api call here to list out the data based on the year and month
-    listHouseLogs(params["houseId"].toString(), monthVal, year);
-    console.log(addFlexItem);
-    setAddFlexItem([]);
+  function getHouseLogs(): void {
+    getHouseLogsOnDateRange(params["houseId"].toString(), monthVal, year).then(
+      (val: any) => {
+        updateMonthVal(monthVal);
+        updateYear(year);
+        setHouseLogs(val);
+        updateTotalAmount(houseLogs);
+      }
+    );
   }
 
-  async function listHouseLogs(
-    houseId: String,
-    selectedMonth: number,
-    selectedYear: number
-  ) {
-    amount = 0;
-    let start = new Date(selectedYear + "-" + selectedMonth + "-01");
-    var month = selectedMonth;
-    var year = selectedYear;
-
-    if (selectedMonth == 12) {
-      month = 1;
-
-      year = Number(selectedYear) + 1;
-    } else {
-      month = Number(selectedMonth) + 1;
-      year = selectedYear;
-    }
-    let end = new Date(year + "-" + month + "-01");
-
-    const h3 = firebase.firestore().collection("houseLogs");
-    const b = h3
-      .where("houseId", "==", houseId)
-      .where("date", ">", start)
-      .where("date", "<", end);
-    house = await getDocs(b);
-    addFlexItem = [];
-    house.docs.map((docs, i) => {
-      amount += parseInt(docs.data()["total"]);
-      addFlexItem[i] = {
-        id: docs.id,
-        filename: docs.data()["filename"],
-        notes: docs.data()["notes"],
-        total: docs.data()["total"],
-        date: docs.data()["date"].toDate().toDateString(),
-      };
-      console.log(docs.data());
-      setAddFlexItem(addFlexItem);
-    });
-
+  function updateTotalAmount(houseLogs: any) {
+    amount = houseLogs.reduce((a: any, b: any) => +a + +b.total, 0);
     updateAmount(amount);
   }
 
-  function deleteItem(event: any){
-    console.log(event)
-    //delete this and show alert 
-    confirmAlert('delete', 'confirm to delete this record?', (() => {
-      firebase
-      .firestore()
-      .collection("/houseLogs").doc(event).delete().then(function() {
-        console.log("Document successfully deleted!");
-    }).catch(function(error: any) {
-        console.error("Error removing document: ", error);
+  function deleteItem(event: any) {
+    console.log(event);
+    // delete this and show alert
+    confirmAlert("delete", "confirm to delete this record?", () => {
+      deleteHouseLog(event)
+        .then(() => {
+          window.location.reload();
+        })
+        .catch(function (error: any) {
+          console.error("Error removing document: ", error);
+        });
     });
-      // console.log(h3)
-    }))
   }
 
   return (
@@ -141,26 +115,26 @@ export default function HouseLogs() {
             <img
               alt="Placeholder"
               className="block h-auto w-full"
-              src={house?.docs[0].data()["house_image"]}
+              src={(houseDetail as any)["house_image"]}
             />{" "}
           </div>
         </div>
         <div className="col-span">
           <div>
-            <Box sx={{ p: 1 }}>Name : {house?.docs[0].data()["houseName"]}</Box>
+            <Box sx={{ p: 1 }}>Name : {(houseDetail as any)["houseName"]}</Box>
             <Box sx={{ p: 1 }}>
-              Installment : RM {house?.docs[0].data()["installement"]}
+              Installment : RM {(houseDetail as any)["installement"]}
             </Box>
             <Box sx={{ p: 1 }}>
-              Maintenance : RM {house?.docs[0].data()["maintenance"]}
+              Maintenance : RM {(houseDetail as any)["maintenance"]}
             </Box>
             <Box sx={{ p: 1 }}>
-              Sinking fund : RM : {house?.docs[0].data()["sinkingFund"]}
+              Sinking fund : RM : {(houseDetail as any)["sinkingFund"]}
             </Box>
-            <Box sx={{ p: 1 }}>Wifi : RM {house?.docs[0].data()["wifi"]}</Box>
+            <Box sx={{ p: 1 }}>Wifi : RM {(houseDetail as any)["wifi"]}</Box>
             <Box sx={{ p: 1 }}>
-              {house?.docs[0].data()["text1key"]} :{" "}
-              {house?.docs[0].data()["text1Value"]}
+              {(houseDetail as any)["text1key"]} :{" "}
+              {(houseDetail as any)["text1Value"]}
             </Box>
             <Box sx={{ p: 1 }}>
               <Button
@@ -234,7 +208,7 @@ export default function HouseLogs() {
             style={{ margin: "10px" }}
             variant="outlined"
             className="mt-3"
-            onClick={tryCall}
+            onClick={getHouseLogs}
             endIcon={<SearchIcon />}
           >
             Query
@@ -280,7 +254,7 @@ export default function HouseLogs() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {addFlexItem.map((row, i) => {
+              {houseLogs.map((row: any, i: number) => {
                 return (
                   <tr className="bg-white">
                     <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
@@ -296,21 +270,21 @@ export default function HouseLogs() {
                     </td>
                     <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
                       <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">
-                      <a href={row["filename"]}>Image</a>
+                        <a href={row["filename"]}>Image</a>
                       </span>
                     </td>
                     <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                      {row["date"]}
+                      {row["date"]
+                        ? moment(row["date"].toDate()).format("DD-MM-YYYY")
+                        : ""}
                     </td>
                     <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
                       {row["total"]}
                     </td>
                     <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                      <button onClick={() => deleteItem(row['id'])}>
-                        {row['id']}
+                      <button onClick={() => deleteItem(row["id"])}>
+                        {row["id"]}
                       </button>
-                      
-                      
                     </td>
                   </tr>
                 );

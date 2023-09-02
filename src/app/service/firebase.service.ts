@@ -11,38 +11,65 @@ import { getDocs } from "firebase/firestore";
 
 
 export const getHouseList = async (): Promise<any> => {
-    var [houseList] = useState([
-        { houseName: "", house_image: "", houseId: "", location: "" },
-    ]);
+    const housesCollection = await firebase.firestore().collection("houses")
+    const houses = await getDocs(housesCollection)
+    var list: any = [{}]
+    houses.docs.map((doc, i) => {
+        list[i] = doc.data()
+    });
+    console.log(list)
+    return list
+}
 
-    var [houses, houseDetailLoading] = useCollection(
-        firebase
-          .firestore()
-          .collection("houses")
-          ,
-        {}
-      );
+export const getHouseDetails = async (houseId: String): Promise<any> => {
+    const housesCollection = await firebase.firestore().collection("houses").doc(houseId).get()
+    var returnData = housesCollection.data()
+    return returnData
+}
 
-    const h3 = firebase.firestore().collection("houses");
-    // const b = h3
-    //   .where("houseId", "==", houseId)
-    //   .where("date", ">", start)
-    //   .where("date", "<", end);
-    houses = await getDocs(h3);
+export const getHouseLogsOnDateRange = async (
+    houseId: String,
+    selectedMonth: number,
+    selectedYear: number): Promise<any> => {
 
-    // return houses.docs
-    var list = [...houseList]
+    let start = new Date(selectedYear + "-" + selectedMonth + "-01");
+    var month = selectedMonth;
+    var year = selectedYear;
 
-    // if (!housesLoading && houses) {
-        houses.docs.map((doc, i) => {
-            list[i] = {
-                houseName: doc.data()["houseName"],
-                house_image: doc.data()["house_image"],
-                houseId: doc.data()["houseId"],
-                location: doc.data()["location"]
-            };
-        });
-        return list
-    // }
-    
+    if (selectedMonth == 12) {
+        month = 1;
+
+        year = Number(selectedYear) + 1;
+    } else {
+        month = Number(selectedMonth) + 1;
+        year = selectedYear;
+    }
+    let end = new Date(year + "-" + month + "-01");
+
+    const houseLogsCollection = firebase.firestore().collection("houseLogs");
+    const houseLogs = houseLogsCollection
+        .where("houseId", "==", houseId)
+        .where("date", ">", start)
+        .where("date", "<", end);
+    const houseLogsVal = await getDocs(houseLogs);
+    var list: any = [{}]
+    houseLogsVal.docs.map((doc, i) => {
+        list[i] = doc.data()
+        list[i]['id'] = doc.id // manual update the id here
+    });
+
+    return list
+}
+
+export const deleteHouseLog = async (houseId : string) : Promise<any> => {
+    var status;
+    firebase
+    .firestore()
+    .collection("/houseLogs")
+    .doc(houseId)
+    .delete().then((val: any) =>{
+        console.log(val)
+        status = val
+    })
+    return status;
 }

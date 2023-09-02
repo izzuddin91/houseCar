@@ -9,42 +9,23 @@ import { getHouseList } from "@/app/service/firebase.service";
 export default function Home() {
 
   useEffect(() => {
+    getData()
   }, []);
 
-  const [houses, housesLoading, housesError] = useCollection(
-    firebase.firestore().collection("houses"),
-    {}
-  );
-  // const [addFlexItem, setAddFlexItem] = useState([{id: '', fullName: '', username: '', phoneNo: '' }])
-  const [addFlexItem, setAddFlexItem] = useState([
-    { houseName: "", house_image: "", houseId: "" , location: ""},
-  ]);
-  var returnList : any;
+  var [houses, updateHouses] : any = useState([{}])
 
-
-  // houses?.docs.map((doc) => console.log(doc.data()));
-  var array = [{}];
-  var list = [...addFlexItem];
-
-  if (!housesLoading && houses) {
-    houses.docs.map((doc, i) => {
-      // console.log(doc.data()['houseName'])
-      list[i] = {
-        houseName: doc.data()["houseName"],
-        house_image: doc.data()["house_image"],
-        houseId: doc.data()["houseId"],
-        location: doc.data()["location"]
-      };
-      // array.push(doc.data())
-    });
+  async function getData(){
+    getHouseList().then((val: any) => {
+      houses = val
+      updateHouses(val)
+    })
   }
-  //  setAddFlexItem(list)
 
   return (
     <div className="p-8 space-y-5">
       <h1 className="text-xl mb-2">Your properties</h1>
       <div className="grid grid-cols-3 gap-3 ">
-        {list.map((row) => {
+        {houses.map((row: any) =>{
           var link = "/houseLogs/" + row["houseId"];
           return (
             <article className="overflow-hidden rounded-lg shadow-lg">

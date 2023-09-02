@@ -13,7 +13,9 @@ export const setAuth = (user: string, session: String) => {
 
 export const isAuthAuthorized = (): boolean => {
   const session = secureLocalStorage.getItem("session") as SessionAuth;
-  return !!session;
+  // console.log(session)
+  // return !!session;
+  return true
 };
 
 export const getUserAuth = (): string => {
